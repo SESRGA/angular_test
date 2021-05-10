@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {map} from "rxjs/operators";
-import {PostsProvider} from "../../../data/data";
+import {Post, PostsProvider} from "../../../data/data";
 
 @Component({
   selector: 'app-root',
@@ -9,12 +9,12 @@ import {PostsProvider} from "../../../data/data";
   styleUrls: ['./post-page.component.css']
 })
 export class PostPageComponent {
-  public post: any
+  public post: Post | null
   public loaded: boolean = false
   constructor(route: ActivatedRoute, provider: PostsProvider) {
-    route.params.pipe(map(p => p.id)).subscribe((id)=>{
+    route.params.pipe(map(p => p.id)).subscribe((id) => {
       provider.getById(+id).subscribe((c) => {
-        this.post = c.data()
+        this.post = (new Post()).createFromDoc(c)
         this.loaded = true
       })
     })

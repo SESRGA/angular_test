@@ -1,30 +1,39 @@
 import {Injectable} from "@angular/core";
 import {AngularFirestore} from "@angular/fire/firestore";
+import firebase from "firebase";
+import DocumentSnapshot = firebase.firestore.DocumentSnapshot;
 
-const state = {
-  posts: []
+
+export class Post {
+  public title: string;
+  public content: string;
+  public id: number;
+
+  public createFromDoc(doc: DocumentSnapshot<unknown>) {
+    Object.assign(this, doc.data())
+    this.id = +doc.id
+    return this;
+  }
 }
-
 @Injectable({providedIn: "root"})
 export class PostsProvider {
-  public posts: any = []
+  public posts: Post[] = []
   constructor(private db: AngularFirestore) {
-    db.collection("posts").get().subscribe((querySnapshot) => {
+    this.getCollection().get().subscribe((querySnapshot) => {
       querySnapshot.forEach((doc) => {
-        this.posts.push({
-          id: +doc.id,
-          // @ts-ignore
-          ...doc.data(),
-        })
+        this.posts.push((new Post()).createFromDoc(doc))
       })})
   }
 
+  private getCollection() {
+    return this.db.collection("posts");
+  }
 
-  public getAll(){
+  public getAll(): Post[]{
     return this.posts
   }
 
-  getById(id: number) {
-    return this.db.collection("posts" ).doc(id.toString()).get()
+  public getById(id: number) {
+    return this.getCollection().doc(id.toString()).get()
   }
 }
