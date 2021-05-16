@@ -15,25 +15,65 @@ export class Post {
     return this;
   }
 }
+
 @Injectable({providedIn: "root"})
 export class PostsProvider {
-  public posts: Post[] = []
-  constructor(private db: AngularFirestore) {
-    this.getCollection().get().subscribe((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        this.posts.push((new Post()).createFromDoc(doc))
-      })})
-  }
+
+  constructor(private db: AngularFirestore) {}
 
   private getCollection() {
     return this.db.collection("posts");
   }
 
-  public getAll(): Post[]{
-    return this.posts
-  }
-
   public getById(id: number) {
     return this.getCollection().doc(id.toString()).get()
+  }
+
+  public getPaginationList(pageNumber: number, postsCount: number): Promise<Post[]> {
+
+    const offset = postsCount * pageNumber;
+    if (offset === 0) {
+      return new Promise(resolve => {
+        this.getCollection().ref
+          .orderBy(firebase.firestore.FieldPath.documentId())
+          .limit(postsCount).get().then((querySnapshot) => {
+          const result = []
+          querySnapshot.forEach((doc) => {
+            result.push((new Post()).createFromDoc(doc));
+          })
+          resolve(result)
+        })
+      })
+
+    } else {
+      let current = this.getCollection().ref
+        .orderBy(firebase.firestore.FieldPath.documentId())
+        .limit(offset)
+
+      return new Promise(resolve => {
+        current.get().then((documentSnapshots) => {
+          const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
+          const next = this.getCollection().ref
+            .orderBy(firebase.firestore.FieldPath.documentId())
+            .startAfter(lastVisible.id)
+            .limit(postsCount);
+          next.get().then((querySnapshot) => {
+            const result = []
+            querySnapshot.forEach((doc) => {
+              result.push((new Post()).createFromDoc(doc));
+            })
+            resolve(result)
+          })
+        });
+      })
+    }
+  }
+
+  getTotalCount(): Promise<number>{
+    return new Promise(resolve => {
+      this.getCollection().ref.get().then((querySnapshot) => {
+        resolve(querySnapshot.docs.length)
+      })
+    })
   }
 }

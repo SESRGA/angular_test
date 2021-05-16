@@ -7,6 +7,7 @@ import {MatCardModule} from "@angular/material/card";
 import {PostPageComponent} from "./page/post-page/post-page.component";
 import {MatButtonModule} from "@angular/material/button";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
+import {MatPaginatorModule} from "@angular/material/paginator";
 
 @NgModule({
   declarations: [
@@ -19,6 +20,7 @@ import {MatProgressBarModule} from "@angular/material/progress-bar";
     BrowserModule,
     MatCardModule,
     MatButtonModule,
+    MatPaginatorModule,
   ],
   providers: [],
   bootstrap: [PageComponent]
