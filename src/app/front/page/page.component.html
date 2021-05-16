@@ -1,15 +1,35 @@
- <div *ngFor="let post of posts">
-    <front-card
+<div style="padding-bottom: 40px">
+  <div style="width: 50%; display: inline-block">
+    <mat-select (selectionChange)="onTagsSelectEvent($event)" [(value)]="selectedTagId">
+      <mat-option>-- None --</mat-option>
+      <mat-option *ngFor="let tag of tags" [value]="tag.id">
+        {{tag.name}}
+      </mat-option>
+    </mat-select>
+  </div>
+  <div style="width: 50%; display: inline-block">
+    <mat-select (selectionChange)="onCategoriesSelectEvent($event)" [(value)]="selectedCategoryId">
+      <mat-option>-- None --</mat-option>
+      <mat-option *ngFor="let category of categories" [value]="category.id">
+        {{category.name}}
+      </mat-option>
+    </mat-select>
+  </div>
+</div>
+
+<div *ngFor="let post of posts">
+  <front-card
     [title]="post.title"
     [content]="post.content"
     [id]="post.id"
-    ></front-card>
-  </div>
+  ></front-card>
+</div>
 
- <mat-paginator [length]="postsTotalCount"
-                [pageSize]="pageSize"
-                (page)="onPageEvent($event)">
- </mat-paginator>
+<mat-paginator [length]="postsTotalCount"
+               [pageIndex]="selectedPageIndex"
+               [pageSize]="pageSize"
+               (page)="onPageEvent($event)">
+</mat-paginator>
 
 
 

@@ -14,8 +14,8 @@ import {AngularFireAuthModule} from '@angular/fire/auth';
 import {firebaseConfig} from 'src/environments/vars';
 
 const routes: Routes = [
-  { path: '', component: PageComponent },
-  { path: 'posts/:id', component: PostPageComponent}
+  {path: '', component: PageComponent},
+  {path: 'posts/:id', component: PostPageComponent}
 ];
 
 @NgModule({
@@ -35,4 +35,5 @@ const routes: Routes = [
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+}

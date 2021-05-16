@@ -19,22 +19,61 @@ export class Post {
 @Injectable({providedIn: "root"})
 export class PostsProvider {
 
-  constructor(private db: AngularFirestore) {}
+  constructor(private db: AngularFirestore) {
+  }
 
   private getCollection() {
     return this.db.collection("posts");
   }
 
-  public getById(id: number) {
-    return this.getCollection().doc(id.toString()).get()
+  private getPostTagsCollection() {
+    return this.db.collection("post_tags");
   }
 
-  public getPaginationList(pageNumber: number, postsCount: number): Promise<Post[]> {
+  public getById(id: number): Promise<Post> {
+    return new Promise(resolve => this.getCollection().doc(id.toString()).get().subscribe((docSnapshot) => {
+      resolve((new Post()).createFromDoc(docSnapshot))
+    }))
+  }
 
+  public getPaginationList(pageNumber: number, postsCount: number, tagId: number | null, categoryId: number | null): Promise<Post[]> {
     const offset = postsCount * pageNumber;
     if (offset === 0) {
       return new Promise(resolve => {
-        this.getCollection().ref
+        let query: firebase.firestore.Query<unknown> = this.getCollection().ref;
+        if (!!categoryId) {
+          query = query.where("category_id", "==", categoryId)
+        }
+        if (!!tagId) {
+          return new Promise(resolve => {
+            this.getPostTagsCollection().ref
+              .where("tag_id", "==", tagId)
+              .get().then((querySnapshot) => {
+              const postIds = []
+              querySnapshot.forEach((elem) => {
+                // @ts-ignore
+                postIds.push(elem.data().post_id.toString())
+              })
+              resolve(postIds)
+            })
+          }).then((postIds: []) => {
+            if (postIds.length === 0) {
+              resolve([])
+              return
+            }
+            query
+              .where(firebase.firestore.FieldPath.documentId(), "in", postIds)
+              .orderBy(firebase.firestore.FieldPath.documentId())
+              .limit(postsCount).get().then((querySnapshot) => {
+              const result = []
+              querySnapshot.forEach((doc) => {
+                result.push((new Post()).createFromDoc(doc));
+              })
+              resolve(result)
+            })
+          })
+        }
+        query
           .orderBy(firebase.firestore.FieldPath.documentId())
           .limit(postsCount).get().then((querySnapshot) => {
           const result = []
@@ -44,12 +83,10 @@ export class PostsProvider {
           resolve(result)
         })
       })
-
     } else {
       let current = this.getCollection().ref
         .orderBy(firebase.firestore.FieldPath.documentId())
         .limit(offset)
-
       return new Promise(resolve => {
         current.get().then((documentSnapshots) => {
           const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
@@ -69,7 +106,7 @@ export class PostsProvider {
     }
   }
 
-  getTotalCount(): Promise<number>{
+  getTotalCount(): Promise<number> {
     return new Promise(resolve => {
       this.getCollection().ref.get().then((querySnapshot) => {
         resolve(querySnapshot.docs.length)
@@ -77,3 +114,5 @@ export class PostsProvider {
     })
   }
 }
+
+
